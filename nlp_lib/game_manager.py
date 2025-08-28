@@ -37,22 +37,24 @@ class GameManager:
     async def get_game(self):
         return await self.queue.get()
 
-games = []
-async def main():
-    gm = GameManager(queue_max_size=3)
-    task = asyncio.create_task(gm.worker())
 
-    # pega alguns jogos
-    for _ in range(5):
-        game = await gm.get_game()
-        print("Got game:", game)
-        games.append(game)
+if __name__ == "__main__":
+    games = []
+    async def main():
+        gm = GameManager(queue_max_size=3)
+        task = asyncio.create_task(gm.worker())
 
-    # encerra o worker
-    task.cancel()
-    try:
-        await task
-    except asyncio.CancelledError:
-        print("Worker cancelled")
+        # pega alguns jogos
+        for _ in range(5):
+            game = await gm.get_game()
+            print("Got game:", game)
+            games.append(game)
 
-asyncio.run(main())
+        # encerra o worker
+        task.cancel()
+        try:
+            await task
+        except asyncio.CancelledError:
+            print("Worker cancelled")
+
+    asyncio.run(main())
