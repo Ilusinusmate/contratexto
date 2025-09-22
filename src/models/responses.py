@@ -4,21 +4,24 @@ from typing import List
 from src.models.player_model import PlayerModel
 
 class BaseResponse(BaseModel):
-    connection_id: str
+    connection_id: str | None
     type: str
     status: bool
 
 class SetNameResponse(BaseResponse):
     type: str = "SET_NAME"
-    new_nick_name: str
+    new_nickname: str
 
 class WordPositionResponse(BaseResponse):
     type: str = "WORD"
     word: str
-    position: int
+    position: int | None
 
 class FrozenResponse(BaseResponse):
     type: str = "FROZEN"
+
+class FreezeReponse(BaseResponse):
+    type: str = "FREEZE"
 
 class RankResponse(BaseResponse):
     type: str = "RANK"

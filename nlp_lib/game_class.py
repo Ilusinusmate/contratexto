@@ -1,7 +1,7 @@
 from random import choice
 from typing import List
 
-from settings import BASE_DIR
+from nlp_lib.settings import BASE_DIR
 
 
 class Contratexto():
@@ -35,7 +35,8 @@ class Contratexto():
 
 
     def create_game_data(self):  
-        self.GameData = {}      
+        self.GameData = {} 
+        word_list = []    
 
         for palavra in self.general_words_df:
             if not palavra.has_vector: continue
@@ -45,17 +46,14 @@ class Contratexto():
                 self.create_game_data()
 
             coef = self.target_word.similarity(palavra)
-            self.GameData[palavra.text] = coef 
-    
-        word_list: List = list(self.GameData.items())
+            word_list.append((coef, palavra.text))
         
-        word_list.sort(reverse = True, key=lambda x: x[1])
+        word_list.sort()
 
         for idx, element in enumerate(word_list):
-            word: str = element[0].lower()
+            word: str = element[1].lower()
             self.GameData[word] = idx + 1
             self.GameData[idx + 1] = word
-
 
 
     def normalize(self, input_str: str) -> str:
@@ -65,17 +63,14 @@ class Contratexto():
         return res.lower()
 
 
-
-    def search_word_position(self, pos: int) -> str:
+    def get_word_in_position(self, pos: int) -> str:
         return self.GameData.get(pos, None)
 
 
-
-    def get_position_of_word(self, word: str) -> int:
+    def guess_word(self, word: str) -> int | None:
         word = self.normalize(word)
         return self.GameData.get(word, None)
 
 
-    
     def _get_random_target_word(self):
         return choice(self.target_words)

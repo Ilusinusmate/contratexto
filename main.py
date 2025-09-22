@@ -1,6 +1,5 @@
 from src.app import app
-import src.controllers.websockets
-import src.controllers.worker
+import src.controllers.runner
 
 import uvicorn
 
