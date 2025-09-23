@@ -1,4 +1,5 @@
 from typing import Awaitable
+from fastapi import BackgroundTasks
 from functools import wraps
 
 from nlp_lib.game_class import Contratexto
@@ -15,11 +16,18 @@ class GameUsecase():
         self.websockect_usecase: WebsocketUsecase = websocket_usecase
 
 
+
     async def _get_game(self) -> Awaitable[Contratexto]:
         return await self.nlp_manager.get_game()
 
-    async def _finalize_round(self) -> None:
+
+
+    async def _finalize_round(self, player: PlayerEntity, check_winner: bool = True) -> None:
+        if check_winner:
+            await self.websockect_usecase.check_user_winned_game(player)
         await self.websockect_usecase.broad_cast_rank()
+
+
 
     def check_frozen(func):
         @wraps(func)
@@ -28,6 +36,7 @@ class GameUsecase():
                 return FrozenResponse(connection_id=player.connection_id)
             return await func(self, player, *args, **kwargs)
         return wrapper
+
 
 
     def check_perks_available(func):
@@ -42,18 +51,27 @@ class GameUsecase():
         return wrapper
 
 
+
     def get_player_by_connection_id(self, connection_id: str) -> PlayerEntity | None:
         return self.manager.get_player(connection_id=connection_id)
 
 
-    async def set_player_nickname(self, player: PlayerEntity, new_nickname: str) -> SetNameResponse | ErrorResponse:
+
+    async def set_player_nickname(
+        self,
+        player: PlayerEntity,
+        background_tasks: BackgroundTasks,
+        new_nickname: str
+    ) -> SetNameResponse | ErrorResponse:
+        
         if self.manager.set_player_nickname(player, new_nickname):
             return SetNameResponse(
                 connection_id=player.connection_id,
                 new_nickname=new_nickname,
             )
         
-        await self._finalize_round()
+
+        background_tasks.add_task(self._finalize_round, player, False)
         return ErrorResponse(
             connection_id=player.connection_id,
             error="Nicknames must be uniques!"
@@ -62,7 +80,11 @@ class GameUsecase():
 
 
     @check_frozen
-    async def guess_word(self, player: PlayerEntity, word: str) -> FrozenResponse | WordPositionResponse:
+    async def guess_word(
+        self, player: PlayerEntity,
+        background_tasks: BackgroundTasks,
+        word: str
+    ) -> FrozenResponse | WordPositionResponse:
 
         game: Contratexto = await self._get_game()
         position = game.guess_word(word)
@@ -72,12 +94,12 @@ class GameUsecase():
             position=position
         )
 
-        # TODO : SOLVE WINNER THINGS
-        await self.websockect_usecase.check_user_winned(
-            player,
+        await self.websockect_usecase.check_user_winned_round(
+            player=player,
+            word_position=position
         )
 
-        await self._finalize_round()
+        background_tasks.add_task(self._finalize_round, player)
         return WordPositionResponse(
             connection_id=player.connection_id,
             position=position,
@@ -85,21 +107,41 @@ class GameUsecase():
         )
     
 
+
     @check_frozen
     @check_perks_available
-    async def freeze_player(self, player: PlayerEntity, target_id: str) -> FrozenResponse | FreezeReponse | ErrorResponse:
+    async def freeze_player(
+        self,
+        player: PlayerEntity,
+        background_tasks: BackgroundTasks,
+        target_id: str
+    ) -> FrozenResponse | FreezeReponse | ErrorResponse:
 
-        self.manager.freeze_player(target_id)
 
-        await self._finalize_round()
+
+        result = self.manager.freeze_player(target_id)
+        
+        if not result:
+            return ErrorResponse(
+                connection_id=player.connection_id,
+                error="Was not possible to Freeze this player."
+            )
+        
+        self.manager.use_perk(player.connection_id)
+        background_tasks.add_task(self._finalize_round, player, False)
         return FreezeReponse(
             connection_id=player.connection_id,
         )
         
 
+
     @check_frozen
     @check_perks_available
-    async def ask_hint(self, player: PlayerEntity) -> FrozenResponse | ErrorResponse | WordPositionResponse:
+    async def ask_hint(
+        self,
+        player: PlayerEntity,
+        background_tasks: BackgroundTasks
+    ) -> FrozenResponse | ErrorResponse | WordPositionResponse:
 
         position = self.manager.get_player_rank_pos(player.connection_id)
         game: Contratexto = await self._get_game()
@@ -110,13 +152,19 @@ class GameUsecase():
         )
 
         position = self.manager.calculate_hint_pos(position)
+        
         word = game.get_word_in_position(position)
+
+        self.manager.set_player_rank_pos(
+            player.connection_id,
+            position=position
+        )
 
         self.manager.use_perk(
             connection_id=player.connection_id
         )
 
-        await self._finalize_round()
+        background_tasks.add_task(self._finalize_round, player)
         return WordPositionResponse(
             connection_id=player.connection_id,
             position=position,

@@ -11,39 +11,48 @@ class PlayerEntity():
         nick_name: str = f"user{randint(0, 50)}",
         points: int = 0,
         perks_used: int = CONFIG["MAX_PERKS"],
-        last_frozen: datetime = datetime.now(timezone.utc)+timedelta(minutes=10),
+        last_frozen: datetime = datetime.now(timezone.utc) - timedelta(hours=1),
         best_word_position: int | None = None
     ):
         self.connection_id: str = connection_id 
         self.points: int = points
         self.nickname: str = nick_name
-        self.perks_used: int = perks_used
+        self.perks_left: int = perks_used
         self.last_frozen: datetime = last_frozen
         self.best_word_position: int | None = best_word_position
 
-    def increment_points(self, ammount: int = 1):
+    def increment_points(self, ammount: int = 1) -> None:
         self.points += ammount
 
-    def change_nickname(self, new_nickname: str):
+    def reset_points(self) -> None:
+        self.points = 0
+
+    def change_nickname(self, new_nickname: str) -> None:
         self.nickname = new_nickname
 
-    def use_perk(self):
-        self.perks_used = max(self.perks_used -1, 0)
+    def use_perk(self) -> None:
+        self.perks_left = max(self.perks_left -1, 0)
 
     def can_use_perk(self) -> bool:
-        return self.perks_used <= 0
+        return self.perks_left > 0
 
     def is_frozen(self) -> bool:
-        (datetime.now(timezone.utc)- self.last_frozen) < CONFIG["FROZEN_TIME"]
+        return (datetime.now(timezone.utc) - self.last_frozen) < CONFIG["FROZEN_TIME"]
     
-    def freeze(self):
+    def freeze(self) -> bool:
+        if self.is_frozen(): return False
         self.last_frozen = datetime.now(timezone.utc)
+        return True
 
-    def set_best_word_pos(self, position: int):
+    def set_best_word_pos(self, position: int) -> None:
+        if self.best_word_position == None: 
+            self.best_word_position = position
+            return
+        
         self.best_word_position = min(position, self.best_word_position)
 
     def to_model(self) -> PlayerModel:
-        PlayerModel(
+        return PlayerModel(
             connection_id=self.connection_id,
             is_frozen=self.is_frozen(),
             nick_name=self.nickname,

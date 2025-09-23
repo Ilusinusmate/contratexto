@@ -19,7 +19,8 @@ nlp_manager = GameManager(queue_max_size=CONFIG["GAME_MAX_QUEUE_SIZE"])
 
 websocket_usecase = WebsocketUsecase(
     connection_manager=connection_manager,
-    game_state_manager=game_state_manager
+    game_state_manager=game_state_manager,
+    nlp_manager=nlp_manager
 )
 
 game_usecase = GameUsecase(

@@ -9,7 +9,7 @@ class GameStateManager():
 
     @staticmethod
     def calculate_hint_pos(pos: int) -> int:
-        if pos >= 3: return 2
+        if pos <= 3: return 2
         return pos // 2
 
     def add_player(self, connection_id: str, player: PlayerEntity) -> None:
@@ -64,9 +64,10 @@ class GameStateManager():
         if connection_id in self.players:
             return self.players[connection_id].is_frozen()
 
-    def freeze_player(self, connection_id: str) -> None:
+    def freeze_player(self, connection_id: str) -> bool:
         if connection_id in self.players:
-            self.players[connection_id].freeze()
+            return self.players[connection_id].freeze()
+        return False
 
     def can_use_perk(self, connection_id: str) -> bool:
         if connection_id in self.players:
@@ -77,9 +78,15 @@ class GameStateManager():
             self.players[connection_id].use_perk()
 
     def set_player_rank_pos(self, connection_id: str, position: int) -> None:
-        if connection_id in self.best_actual_rank and connection_id in self.players:
-            self.best_actual_rank[connection_id] = min(position, self.best_actual_rank[connection_id])
-            self.players[connection_id].set_best_word_pos(position)
+        if connection_id in self.players:
+            self.best_actual_rank[connection_id] = min(position, self.best_actual_rank.get(connection_id, float("inf")))
+            self.players[connection_id].set_best_word_pos(
+                self.best_actual_rank[connection_id]
+            )
 
     def get_player_rank_pos(self, connection_id: str) -> int | None:
         return self.best_actual_rank.get(connection_id, None)
+
+    def reset_rank(self) -> None:
+        for connection_id in self.players:
+            self.players[connection_id].reset_points()

@@ -1,12 +1,12 @@
 from typing import Annotated, Union
-from fastapi import Query, HTTPException, status, Depends
+from fastapi import BackgroundTasks, Query, HTTPException, status, Depends
 
 from src.domain.entities.player_entity import PlayerEntity
 from src.models.responses import WordPositionResponse, FrozenResponse, SetNameResponse, ErrorResponse
 from src.app import app, game_usecase
 from src.domain.usecases.game_usecase import GameUsecase
 
-
+# DEPENDECY
 def check_connection_id(connection_id: str = Query(...)):
     player = game_usecase.get_player_by_connection_id(connection_id)
 
@@ -23,9 +23,11 @@ def check_connection_id(connection_id: str = Query(...)):
 async def ask_hint(
     *,
     player: Annotated[PlayerEntity, Depends(check_connection_id)],    
+    background_tasks: BackgroundTasks,
 ):
     response = await game_usecase.ask_hint(
-        player=player
+        player=player,
+        background_tasks=background_tasks
     )
 
     response.connection_id = player.connection_id
@@ -36,11 +38,13 @@ async def ask_hint(
 async def freeze_player(
     *,
     player: Annotated[PlayerEntity, Depends(check_connection_id)],    
+    background_tasks: BackgroundTasks,
     target_id: str,
 ):
     response = await game_usecase.freeze_player(
         player=player,
-        target_id=target_id
+        target_id=target_id,
+        background_tasks=background_tasks
     )
 
     response.connection_id = player.connection_id
@@ -51,11 +55,13 @@ async def freeze_player(
 async def guess_word(
     *,
     player: Annotated[PlayerEntity, Depends(check_connection_id)],
+    background_tasks: BackgroundTasks,
     word: str,    
 ):
     response = await game_usecase.guess_word(
         player=player,
-        word=word
+        word=word,
+        background_tasks=background_tasks
     )
 
     response.connection_id = player.connection_id
@@ -66,11 +72,13 @@ async def guess_word(
 async def set_nickname(
     *,
     player: Annotated[PlayerEntity, Depends(check_connection_id)],
+    background_tasks: BackgroundTasks,
     new_nickname: str,    
 ):
     response = await game_usecase.set_player_nickname(
         player=player,
-        new_nickname=new_nickname
+        new_nickname=new_nickname,
+        background_tasks=background_tasks
     )
 
     response.connection_id = player.connection_id
