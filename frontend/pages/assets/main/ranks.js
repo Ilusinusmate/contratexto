@@ -1,3 +1,5 @@
+import { frozen } from ".net_functions.js";
+
 export function createNode(tag, fClass, content = null) {
   const node = document.createElement(tag);
   node.classList.add(fClass);
@@ -31,12 +33,12 @@ export class GameRank {
     this.gameCondition = new Map(); 
   }
 
-  setUser(name, nSkills, points = 0) {
-    const actualPlayer = new ActualPlayer(name, nSkills, points);
-    this.matchCondition.set(name, actualPlayer);
+  setUser(name, connection_id, nSkills) {
+    const actualPlayer = new ActualPlayer(name, connection_id, nSkills);
+    this.matchCondition.set(connection_id, actualPlayer);
 
-    const gamePlayer = new GamePlayer(name, points);
-    this.gameCondition.set(name, gamePlayer);
+    const gamePlayer = new GamePlayer(name, connection_id);
+    this.gameCondition.set(connection_id, gamePlayer);
   }
 
   uploadGameRank() {
@@ -66,11 +68,12 @@ export class GameRank {
 }
 
 class GamePlayer {
-  constructor(name, points =0) {
+  constructor(name, connection_id) {
     this.frontRank = document.getElementById("game_rank");
 
     this.name = name;
-    this.points = points;
+    this.conection_id = connection_id;
+    this.points = 0;
 
     this.show();
   }
@@ -96,12 +99,14 @@ class GamePlayer {
 }
 
 class ActualPlayer {
-  constructor(name, skills, points =0) {
+  constructor(name, connection_id, skills) {
     this.frontRank = document.getElementById("actual_rank");
 
     this.name = name;
-    this.points = points;
+    this.conection_id = connection_id;
+    this.points = 0;
     this.skills = skills;
+    this.is_frozen = false;
 
     this.show();
   }
@@ -144,7 +149,7 @@ class ActualPlayer {
       this.freezeButton.classList.add("pressed");
       setTimeout(() => {
         this.freezeButton.classList.remove("pressed");
-      }, 10000);
+      }, 20000);
     });
   }
 }

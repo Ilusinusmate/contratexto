@@ -67,7 +67,7 @@ class Game {
 
     this.used_words.add(actual_w);
 
-    const position = await getWordPos(actual_w, this.connection_id); // isso aqui é basicamente um teste a api vai me retornar isso
+    const position = await getWordPos(actual_w, this.connection_id); 
 
     if (position === null) {
       this.createWarning("Palavra desconhecida!");
@@ -77,8 +77,8 @@ class Game {
     this.insertPosition(actual_w, position);
   }
 
-  setUser(name, points = 0) {
-    this.gamerank.setUser(name, skills, points);
+  setUser(name, connection_id) {
+    this.gamerank.setUser(name, connection_id, skills);
   }
 
   insertPosition(actual_w, wordPosition) {
@@ -189,7 +189,7 @@ async function initialize(connection_id, username, game) {
     window.location.href = "/";
   }
 
-  game.setUser(username);
+  game.setUser(username, connection_id);
 }
 
 document.addEventListener("DOMContentLoaded", async (e) => {
@@ -214,6 +214,17 @@ document.addEventListener("DOMContentLoaded", async (e) => {
         return;
       }
 
+      if (data["type"] === "RANK") {
+        for (const player of data["table"]) {
+          if (!game.gamerank.matchCondition.has(player.connection_id)) {
+            game.setUser(player.name, player.connection_id);
+          }     
+        }
+        game.gamerank.uploadActualRank();
+        game.gamerank.uploadGameRank();
+        return;
+      }
+        
     } catch (err) {
       console.error("Received non-JSON message:", event.data);
     }
