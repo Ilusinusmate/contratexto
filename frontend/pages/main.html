@@ -1,0 +1,30 @@
+<!doctype html>
+
+<html lang="pt-BR">
+<head>
+    <title>Contratexto</title>
+    <link rel="stylesheet" href="../assets/main/style.css">
+</head>
+<body>
+    <div class="column">
+        <h1 class="titles">Rank Jogo</h1>
+        <ol id="game_rank" class="rank"></ol>
+    </div>
+    <div class="column" id="div_guesses">
+        <h1 class="titles">Contratexto</h1>
+        <div id="mid_column">
+            <h1 id="show_hints" class="skills">Congelar/Dicas: 5</h1>
+            <button id="hint_button" class="hint">💡</button>
+        </div>
+        <input type="text" id="word_input" placeholder="digite uma palavra" autocomplete="off"/>
+
+        <ol id="guesses">
+        </ol>
+    </div>
+    <div class="column">
+        <h1 class="titles">Rank Atual</h1>
+        <ol id="actual_rank" class="rank"></ol>
+    </div>
+    <script type="module" src="../assets/main/script.js"></script>
+</body>
+</html>

@@ -1,0 +1,41 @@
+body {
+    background-color: #1e2732;
+    display: flex;
+    align-items: center;   
+    justify-content: center;
+    height: 100vh;
+    margin: 0;
+}
+
+.format {
+    color: #fff;
+    text-align: center;
+    font-family: 'Poppins', sans-serif;
+    font-weight: 700;
+    margin: 0 0 20px 0 ;
+}
+
+#box {
+    background-color: #323a42;
+    padding: 40px;
+    border-radius: 12px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+    display: flex;
+    height: 300px;
+    width: 300px;
+    flex-direction: column;
+    align-items: center;    
+}
+
+#username_input {
+  color: #ffff;
+  width: fit-content;
+  border-style: solid;
+  border-radius: 6px;
+  border: 1px solid #fff;
+  font-size: 24px;
+  background-color: #1e2732;
+  padding: 2px 10px 0 15px ;
+  margin-bottom: 20px;
+}
+
