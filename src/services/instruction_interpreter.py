@@ -96,7 +96,7 @@ class InstructionInterpreter():
         )
         return SetNameResponse(
             status=True,
-            new_nick_name=object.nick_name,
+            new_nickname=object.nick_name,
             connection_id=object.connection_id
         )
 

@@ -6,6 +6,7 @@ class PlayerModel(BaseModel):
     connection_id: str
     points: int
     is_frozen: bool
+    best_word_position: int | None
 
 
 
