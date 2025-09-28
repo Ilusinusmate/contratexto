@@ -5,3 +5,4 @@ from src.models.player_model import PlayerModel
 
 class RankTable(BaseModel):
     table: List[PlayerModel]
+    type: str = "RANK"

@@ -1,5 +1,7 @@
 const usernameInput = document.getElementById("username_input")
 
+
+
 usernameInput.addEventListener("keydown", function (event){
     if (event.key === "Enter"){
 
@@ -13,7 +15,7 @@ usernameInput.addEventListener("keydown", function (event){
         }
         
         sessionStorage.setItem("username", nick);
-        window.location.href = "../pages/main.html";
+        window.location.href = "/game";
 
         usernameInput.value = "";
     

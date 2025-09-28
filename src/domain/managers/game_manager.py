@@ -77,7 +77,8 @@ class GameStateManager():
         if connection_id in self.players:
             self.players[connection_id].use_perk()
 
-    def set_player_rank_pos(self, connection_id: str, position: int) -> None:
+    def set_player_rank_pos(self, connection_id: str, position: int | None) -> None:
+        if position is None: return
         if connection_id in self.players:
             self.best_actual_rank[connection_id] = min(position, self.best_actual_rank.get(connection_id, float("inf")))
             self.players[connection_id].set_best_word_pos(

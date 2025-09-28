@@ -1,5 +1,6 @@
-from fastapi import FastAPI
 import asyncio
+from fastapi import FastAPI
+from pathlib import Path
 
 from nlp_lib.game_manager import GameManager
 from src.domain.managers.connection_manager import ConnectionManager
@@ -8,6 +9,8 @@ from src.services.instruction_interpreter import InstructionInterpreter
 from src.domain.usecases.game_usecase import GameUsecase
 from src.domain.usecases.websocket_usecase import WebsocketUsecase
 from src.configs import CONFIG
+
+BASE_DIR = Path(__file__).parent.parent
 
 app = FastAPI()
 

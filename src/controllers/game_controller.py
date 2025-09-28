@@ -51,7 +51,7 @@ async def freeze_player(
     return response
     
 
-@app.post("/words", response_model=Union[WordPositionResponse, FrozenResponse])
+@app.get("/words", response_model=Union[WordPositionResponse, FrozenResponse])
 async def guess_word(
     *,
     player: Annotated[PlayerEntity, Depends(check_connection_id)],
