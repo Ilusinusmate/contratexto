@@ -1,8 +1,8 @@
 from fastapi import WebSocket, WebSocketDisconnect, BackgroundTasks
 import asyncio
 
-from src.app import app, connection_manager, game_state_manager
-from src.models.responses import LoginResponse
+from src.app import app, connection_manager, game_state_manager, websocket_usecase
+from src.models.responses import LoginResponse, RankResponse
 from src.domain.entities.player_entity import PlayerEntity
 
 async def send_connection_id(connection_id: str):
@@ -10,6 +10,7 @@ async def send_connection_id(connection_id: str):
         LoginResponse(connection_id=connection_id).model_dump(),
         connection_id
     )
+    await websocket_usecase.broad_cast_rank()
 
 
 @app.websocket("/ws")
@@ -32,12 +33,11 @@ async def connect_websocket(
 
     try: 
         while True:
-            await asyncio.sleep(1)
+            await websocket.receive_bytes()
 
     except WebSocketDisconnect:
         connection_manager.disconnect(connection_id)
         game_state_manager.remove_player(connection_id)
-
-    
+        await websocket_usecase.broad_cast_rank()
 
 
