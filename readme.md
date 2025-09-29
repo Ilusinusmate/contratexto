@@ -74,9 +74,9 @@ bash run.sh
 
 O servidor estará disponível em [http://localhost:10000](http://localhost:10000).
 
-### 4. Acesse o Frontend
+### 4. Acesse o Frontend & Backend
 
-Abra o navegador e acesse [http://localhost:10000](http://localhost:10000). Insira um nickname e comece a jogar!
+Abra o navegador e acesse [http://localhost:10000](http://localhost:10000). Insira um nickname e comece a jogar! Caso queria conferir a documentação da API acesse [/docs](http://localhost:10000/docs) e confira o Swagger OpenApi Specs.
 
 ## Tecnologias Utilizadas
 
@@ -97,7 +97,6 @@ Autores e desenvolvedores do projeto:
 
 - [João Gariel Salvador Paiva](https://github.com/Ilusinusmate)
   [LinkedIn](https://br.linkedin.com/in/joao-gabriel-salvador-paiva-805283286)
-
 
 - [Enzo Sales Garcia](https://github.com/enzocompgarcia-design)
   [LinkedIn](https://www.linkedin.com/in/enzo-garcia-0b1008384/)
