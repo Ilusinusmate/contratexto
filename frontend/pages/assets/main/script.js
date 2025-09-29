@@ -40,8 +40,10 @@ class Game {
       this.createWarning(data["error"]);
       return;
     }
-
-    if (this.gamerank.matchCondition.get(data["connection_id"]).is_frozen === true) return this.createWarning("Você está congelado e não pode pedir dicas.");
+    if (data["type"] === "FROZEN") {
+      this.createWarning("Você está congelado e não pode pedir dicas.");
+      return;
+    } 
 
     if (this.checkAlert === false) return;
 

@@ -161,31 +161,45 @@ class ActualPlayer {
   createFreezeButton() {
     this.freezeButton = createNode("button", "freeze_button", "🧊");
 
-    this.freezeButton.addEventListener("click", () => {
+    this.freezeButton.addEventListener("click", async () => {
       const clickedBy = this.currentPlayerId;   
       const target = this.connection_id;       
 
       if (this.skills.number <= 0) return;
       if (this.freezeButton.classList.contains("pressed")) return;
-      if (this.is_frozen) return;
+      if (matchCondition.get(clickedBy).is_frozen) return;
+      if (matchCondition.get(target).is_frozen) return;
 
-      const data = freezePlayer(target, clickedBy);
-      if (data["type"] === "ERROR") {
-        console.error(data["error"]);
-        return;
+      try {
+        const data = await freezePlayer(target, clickedBy);
+
+        if (data.type === "ERROR") {
+          console.error(data.error);
+          return;
+        }
+
+        console.log(data);
+
+        if (data.type === "FROZEN") {
+          console.error("Você está congelado e não pode congelar outro jogador.");
+          return;
+        }
+
+        matchCondition.get(target).setFrozen(true);
+
+        this.skills.number--;
+        document.getElementById("show_hints").textContent = 
+          `Congelar/Dicas: ${this.skills.number}`;
+
+        this.freezeButton.classList.add("pressed");
+
+        setTimeout(() => {
+          matchCondition.get(target).setFrozen(false);
+          this.freezeButton.classList.remove("pressed");
+        }, 20000);
+      } catch (err) {
+        console.error("Erro ao congelar:", err);
       }
-
-      matchCondition.get(target).setFrozen(true);
-
-      this.skills.number--;
-      document.getElementById("show_hints").textContent = `Congelar/Dicas: ${this.skills.number}`;
-
-      this.freezeButton.classList.add("pressed");
-
-      setTimeout(() => {
-        matchCondition.get(target).setFrozen(false);
-        this.freezeButton.classList.remove("pressed");
-      }, 20000);
     });
   }
 }
