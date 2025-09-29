@@ -1,3 +1,5 @@
+import { freezePlayer } from "./net_functions.js";
+
 export function createNode(tag, fClass, content = null) {
   const node = document.createElement(tag);
   node.classList.add(fClass);
@@ -25,14 +27,17 @@ function uploadRank(map, containerId) {
   reorder(document.getElementById(containerId), sortPlayers(map));
 }
 
+const matchCondition = new Map(); 
+const gameCondition = new Map(); 
+
 export class GameRank {
   constructor() {
-    this.matchCondition = new Map(); 
-    this.gameCondition = new Map(); 
+    this.matchCondition = matchCondition; 
+    this.gameCondition = gameCondition; 
   }
 
-  setUser(name, connection_id, nSkills) {
-    const actualPlayer = new ActualPlayer(name, connection_id, nSkills);
+  setUser(name, connection_id, nSkills, currentPlayerId) {
+    const actualPlayer = new ActualPlayer(name, connection_id, nSkills, currentPlayerId);
     this.matchCondition.set(connection_id, actualPlayer);
 
     const gamePlayer = new GamePlayer(name, connection_id);
@@ -47,6 +52,10 @@ export class GameRank {
     uploadRank(this.matchCondition, "actual_rank");
   }
 
+  deleteUser(connection_id) {
+    this.matchCondition.delete(connection_id);
+    this.gameCondition.delete(connection_id);
+  }
 
   finishMatch(username) {
     const winner = this.gameCondition.get(username);
@@ -70,7 +79,7 @@ class GamePlayer {
     this.frontRank = document.getElementById("game_rank");
 
     this.name = name;
-    this.conection_id = connection_id;
+    this.connection_id = connection_id;
     this.points = 0;
 
     this.show();
@@ -89,6 +98,11 @@ class GamePlayer {
     this.frontRank.appendChild(this.li);
   }
 
+  setName(newName) {
+    this.name = newName;
+    this.spanName.textContent = newName;
+  }
+
   addPoints(newPoints) {
     this.points += newPoints;
     this.spanPoints.textContent = this.points;
@@ -97,13 +111,14 @@ class GamePlayer {
 }
 
 class ActualPlayer {
-  constructor(name, connection_id, skills) {
+  constructor(name, connection_id, skills, currentPlayerId) {
     this.frontRank = document.getElementById("actual_rank");
 
-    this.name = name;
-    this.conection_id = connection_id;
+    this.name = name;                 
+    this.connection_id = connection_id; 
+    this.skills = skills;               
+    this.currentPlayerId = currentPlayerId; 
     this.points = 0;
-    this.skills = skills;
     this.is_frozen = false;
 
     this.show();
@@ -119,6 +134,7 @@ class ActualPlayer {
     this.spanPoints = createNode("span", "front_word", this.points);
 
     this.createFreezeButton();
+
     this.div_button.appendChild(this.freezeButton);
     this.div_button.appendChild(this.spanName);
 
@@ -133,19 +149,41 @@ class ActualPlayer {
     this.spanPoints.textContent = newPoints;
   }
 
+  setName(newName) {
+    this.name = newName;
+    this.spanName.textContent = newName;
+  }
+
+  setFrozen(state){
+    this.is_frozen = state;
+  }
+
   createFreezeButton() {
     this.freezeButton = createNode("button", "freeze_button", "🧊");
 
     this.freezeButton.addEventListener("click", () => {
+      const clickedBy = this.currentPlayerId;   
+      const target = this.connection_id;       
+
       if (this.skills.number <= 0) return;
       if (this.freezeButton.classList.contains("pressed")) return;
+      if (this.is_frozen) return;
 
-      this.skills.number --;
-      document.getElementById(
-        "show_hints"
-      ).textContent = `Congelar/Dicas: ${this.skills.number}`;
+      const data = freezePlayer(target, clickedBy);
+      if (data["type"] === "ERROR") {
+        console.error(data["error"]);
+        return;
+      }
+
+      matchCondition.get(target).setFrozen(true);
+
+      this.skills.number--;
+      document.getElementById("show_hints").textContent = `Congelar/Dicas: ${this.skills.number}`;
+
       this.freezeButton.classList.add("pressed");
+
       setTimeout(() => {
+        matchCondition.get(target).setFrozen(false);
         this.freezeButton.classList.remove("pressed");
       }, 20000);
     });

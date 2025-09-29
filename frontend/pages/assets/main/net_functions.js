@@ -28,8 +28,9 @@ export async function getWordPos(word, connection_id) {
   if (data["type"] === "ERROR") {
     console.error(data["error"]);
   }
+  
   console.log(data);
-  return data["position"];
+  return data;
 }
 
 export async function askHint(connection_id) {
@@ -41,6 +42,23 @@ export async function askHint(connection_id) {
       method: "GET",
     }
   );
+
+  return await response.json();
+}
+
+export async function freezePlayer(target_id, connection_id) {
+  const params = new URLSearchParams({ target_id, connection_id });
+
+  const response = await fetch(
+    `${window.location.origin}/freeze?${params.toString()}`,
+    {
+      method: "POST",
+    }
+  );
+
+  if (!response.ok) {
+    throw new Error(`Erro na requisição: ${response.status}`);
+  }
 
   return await response.json();
 }

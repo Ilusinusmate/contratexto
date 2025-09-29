@@ -2,7 +2,7 @@ import { createNode, GameRank } from "./ranks.js";
 import { setName, getWordPos, askHint } from "./net_functions.js";
 
 const show_hints = document.getElementById("show_hints");
-const skills = { number: 3 };
+const skills = { number: 5};
 show_hints.textContent = `Congelar/Dicas: ${skills.number}`;
 
 class Game {
@@ -41,6 +41,10 @@ class Game {
       return;
     }
 
+    if (this.gamerank.matchCondition.get(data["connection_id"]).is_frozen === true) return this.createWarning("Você está congelado e não pode pedir dicas.");
+
+    if (this.checkAlert === false) return;
+
     skills.number--;
     const show_hints = document.getElementById("show_hints");
     show_hints.textContent = `Congelar/Dicas: ${skills.number}`;
@@ -65,10 +69,16 @@ class Game {
 
     if (this.checkAlert(actual_w)) return;
 
+    const data = await getWordPos(actual_w, this.connection_id); 
+
+    if (data["type"] === "FROZEN") {
+      this.createWarning("voce esta congelado");
+      return;
+    }
+
     this.used_words.add(actual_w);
 
-    const position = await getWordPos(actual_w, this.connection_id);
-
+    const position = data["position"];
     if (position === null) {
       this.createWarning("Palavra desconhecida!");
       return;
@@ -78,7 +88,7 @@ class Game {
   }
 
   setUser(name, connection_id) {
-    this.gamerank.setUser(name, connection_id, skills);
+    this.gamerank.setUser(name, connection_id, skills, game.connection_id);
   }
 
   insertPosition(actual_w, wordPosition) {
@@ -95,6 +105,7 @@ class Game {
       this.createWarning(`o jogador ${this.username} venceu a rodada.`);
       return;
     }
+
     if (wordPosition < this.minPos) {
       const playerObj = this.gamerank.matchCondition.get(this.username);
       if (playerObj) {
@@ -135,7 +146,7 @@ class Game {
   }
 
   widthFormat(value) {
-    const normalized = (value - 1) / (20000 - 1);
+    const normalized = (value - 1) / (30000 - 1);
     return (1 - Math.sqrt(normalized)) * 100;
   }
 
@@ -188,8 +199,6 @@ async function initialize(connection_id, username, game) {
     game.createWarning(error);
     window.location.href = "/";
   }
-
-  game.setUser(username, connection_id);
 }
 
 document.addEventListener("DOMContentLoaded", async (e) => {
@@ -216,17 +225,29 @@ document.addEventListener("DOMContentLoaded", async (e) => {
       }
 
       if (data["type"] === "RANK") {
+        game.gamerank.matchCondition.clear();
+        game.gamerank.gameCondition.clear();
+
+        document.getElementById("actual_rank").innerHTML = "";
+        document.getElementById("game_rank").innerHTML = "";
+
         for (const player of data["table"]) {
-          if (!game.gamerank.matchCondition.has(player.connection_id)) {
-            game.setUser(player.name, player.connection_id);
-          }
+            game.gamerank.setUser(player["nick_name"], player["connection_id"], skills, game.connection_id);
+
+            const p = game.gamerank.matchCondition.get(player["connection_id"]);
+            p.setPoints(player["best_word_position"]);
         }
+
         game.gamerank.uploadActualRank();
         game.gamerank.uploadGameRank();
+
         return;
-      }
+    }
+
+
     } catch (err) {
       console.error("Received non-JSON message:", event.data);
+      console.error(err);
     }
   });
 });
