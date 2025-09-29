@@ -67,7 +67,7 @@ class Game {
 
     this.used_words.add(actual_w);
 
-    const position = await getWordPos(actual_w, this.connection_id); 
+    const position = await getWordPos(actual_w, this.connection_id);
 
     if (position === null) {
       this.createWarning("Palavra desconhecida!");
@@ -193,7 +193,9 @@ async function initialize(connection_id, username, game) {
 }
 
 document.addEventListener("DOMContentLoaded", async (e) => {
-  const socket = new WebSocket(`ws://${window.location.host}/ws`);
+  const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
+  const host = window.location.host;
+  const socket = new WebSocket(`${protocol}//${host}/ws`);
   const username = sessionStorage.getItem("username");
   let game;
 
@@ -203,11 +205,10 @@ document.addEventListener("DOMContentLoaded", async (e) => {
       const connection_id = data["connection_id"];
       sessionStorage.setItem("connection_id", connection_id);
       console.log(data);
-      
+
       if (game === undefined) {
         game = new Game(connection_id, username);
       }
-
 
       if (data["type"] === "LOGIN") {
         await initialize(connection_id, username, game);
@@ -218,13 +219,12 @@ document.addEventListener("DOMContentLoaded", async (e) => {
         for (const player of data["table"]) {
           if (!game.gamerank.matchCondition.has(player.connection_id)) {
             game.setUser(player.name, player.connection_id);
-          }     
+          }
         }
         game.gamerank.uploadActualRank();
         game.gamerank.uploadGameRank();
         return;
       }
-        
     } catch (err) {
       console.error("Received non-JSON message:", event.data);
     }
