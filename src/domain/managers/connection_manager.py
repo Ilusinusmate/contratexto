@@ -19,9 +19,15 @@ class ConnectionManager:
     async def send_personal_json(self, message: dict, connection_id: str):
         if connection_id in self.active_connections:
             websocket = self.active_connections[connection_id]
-            await websocket.send_json(message)
+            try:
+                await websocket.send_json(message)
+            except:
+                await self.disconnect(connection_id)
 
     async def broadcast(self, message: dict):
-        for connection in self.active_connections.values():
-            await connection.send_json(message)
+        for connection_id, connection in self.active_connections.items():
+            try:
+                await connection.send_json(message)
+            except:
+                self.disconnect(connection_id)
     

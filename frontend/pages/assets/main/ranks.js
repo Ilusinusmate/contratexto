@@ -1,5 +1,3 @@
-import { frozen } from ".net_functions.js";
-
 export function createNode(tag, fClass, content = null) {
   const node = document.createElement(tag);
   node.classList.add(fClass);
@@ -9,7 +7,7 @@ export function createNode(tag, fClass, content = null) {
 
 function uploadRank(map, containerId) {
   const sortPlayers = (map) =>
-      [...map.values()].sort((a, b) => a.points - b.points); // menor primeiro
+      [...map.values()].sort((a, b) => a.points - b.points);
 
   const reorder = (container, players) => {
     let last = null;

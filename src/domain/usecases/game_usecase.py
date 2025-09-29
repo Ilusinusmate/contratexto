@@ -64,18 +64,18 @@ class GameUsecase():
         new_nickname: str
     ) -> SetNameResponse | ErrorResponse:
         
-        if self.manager.set_player_nickname(player, new_nickname):
-            return SetNameResponse(
+        if not self.manager.set_player_nickname(player, new_nickname):
+            return ErrorResponse(
                 connection_id=player.connection_id,
-                new_nickname=new_nickname,
+                error="Nicknames must be uniques!"
             )
         
-
         background_tasks.add_task(self._finalize_round, player, False)
-        return ErrorResponse(
+        return SetNameResponse(
             connection_id=player.connection_id,
-            error="Nicknames must be uniques!"
+            new_nickname=new_nickname,
         )
+
 
 
 
