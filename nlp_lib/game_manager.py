@@ -1,7 +1,6 @@
 import asyncio
-import pandas as pd
-import spacy
-from spacy.tokens import DocBin
+import numpy as np
+import random
 
 from nlp_lib.game_class import Contratexto
 from nlp_lib.settings import BASE_DIR
@@ -9,61 +8,38 @@ from nlp_lib.settings import BASE_DIR
 class GameManager:
     def __init__(self, queue_max_size: int):
         self.queue = asyncio.Queue(maxsize=queue_max_size)
-        nlp = spacy.load("pt_core_news_lg")
 
-        general_db = DocBin()
-        general_db.from_disk(BASE_DIR / "data/dataset_compressed.bin")
-        self.general_words_df = tuple(general_db.get_docs(nlp.vocab))
+        # carregar os npz
+        general = np.load(BASE_DIR / "data/dataset_compressed.npz", allow_pickle=True)
+        target = np.load(BASE_DIR / "data/target_words_compressed.npz", allow_pickle=True)
 
-        target_db = DocBin()
-        target_db.from_disk(BASE_DIR / "data/target_words_compressed.bin")
-        self.target_words = tuple(target_db.get_docs(nlp.vocab))
+        self.general_words = general["words"]
+        self.general_vectors = general["vectors"]
 
-        self.current_game: Contratexto = None
+        self.target_words = target["words"]
+        self.target_vectors = target["vectors"]
+
+        self.current_game: Contratexto | None = None
 
     def create_game(self):
         return Contratexto(
-            self.general_words_df,
+            self.general_words,
+            self.general_vectors,
             self.target_words,
-        )    
-
-
+            self.target_vectors,
+        )
 
     async def worker(self):
         while True:
             await self.queue.put(self.create_game())
             print("LOG: GAME ADDED TO QUEUE")
 
-
-
     async def get_game(self):
         print("LOG: GAME RETRIEVED FROM QUEUE")
-        if self.current_game != None: return self.current_game
+        if self.current_game is not None:
+            return self.current_game
         self.current_game = await self.queue.get()
         return self.current_game
 
-
     def end_game(self):
         self.current_game = None
-
-if __name__ == "__main__":
-    games = []
-    async def main():
-        gm = GameManager(queue_max_size=3)
-        task = asyncio.create_task(gm.worker())
-
-        # pega alguns jogos
-        for _ in range(5):
-            game = await gm.get_game()
-            print("Got game:", game)
-            games.append(game)
-            gm.end_game()
-
-        # encerra o worker
-        task.cancel()
-        try:
-            await task
-        except asyncio.CancelledError:
-            print("Worker cancelled")
-
-    asyncio.run(main())
